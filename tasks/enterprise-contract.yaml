@@ -1,0 +1,62 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  annotations:
+    tekton.dev/displayName: Enterprise Contract
+    tekton.dev/pipelines.minVersion: "0.19"
+    tekton.dev/tags: cosign, chains, signature
+  labels:
+    app.kubernetes.io/version: "0.1"
+    operator.tekton.dev/provider-type: redhat
+  name: enterprise-contract
+
+spec:
+  description: Applies enterprise policies to a pipeline.
+  serviceAccountName: enterprise-contract-sa
+
+  params:
+    - description: Name of the pipeline run to run policies against.
+      name: PIPELINE_RUN_NAME
+      type: string
+
+  results:
+    - description: A list of policy violations
+      name: OUTPUT
+    - description: A string formatted boolean, either true or false
+      name: PASSED
+
+  steps:
+    - script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        # Todo: Not sure if we need this...
+        [[ "$(workspaces.sslcertdir.bound)" == "true" ]] && export SSL_CERTS_DIR="$(workspaces.sslcertdir.path)"
+
+        cd /appstudio-utils/util-scripts
+        source lib/title.sh
+        source lib/workdir.sh
+
+        # Fetch rego files from github
+        ./fetch-ec-policies.sh
+
+        # Fetch all the relevant data about the pipeline run
+        # from various sources
+        ./fetch-ec-policies.sh
+        ./fetch-ec-data.sh "$(params.PIPELINE_RUN_NAME)"
+
+        # Run opa to check the rego rules and save the output
+        title "Violations"
+        ./check-ec-policy.sh | tee "$(results.OUTPUT.path)"
+
+        # Set result to "true" or "false"
+        title "Passed?"
+        ./ec-pass-fail.sh "$(results.OUTPUT.path)" | tee $(results.PASSED.path)
+
+      name: verify-contract
+      image: appstudio-utils
+
+  # Todo: Not sure if we need this...
+  workspaces:
+  - name: sslcertdir
+    optional: true
