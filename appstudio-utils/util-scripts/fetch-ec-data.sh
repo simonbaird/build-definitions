@@ -12,6 +12,10 @@ set -euo pipefail
 # where the pipeline run is, and the pipelinerun data itself
 # which is not likely to be the case in the future.
 #
+# See also fetch-ec-image-data.sh which does not make this
+# assumption and only fetches data from sources external to
+# the cluster and hence is more realistic.
+#
 # See also tasks/enterprise-contract.yaml
 #
 source $(dirname $0)/lib/fetch.sh

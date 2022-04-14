@@ -93,7 +93,7 @@ echo "Using bundle $USE_BUNDLE for task"
 # - Test it with the default bundle
 # - Would it be nicer to use `tkn start`?
 #
-echo "apiVersion: tekton.dev/v1beta1
+TASKRUN_YAML="apiVersion: tekton.dev/v1beta1
 kind: TaskRun
 metadata:
   generateName: enterprise-contract-
@@ -116,7 +116,15 @@ spec:
     - name: sslcertdir
       secret:
         secretName: chains-ca-cert
-" | oc create -f -
+"
+
+if [[ $PR_NAME =~ ^(sha256:)?[0-9a-fA-F]{64}$ ]]; then
+  # It's an image digest not a pipeline run name
+  # FIXME: Need the IMAGE_URL here too...**
+  TASKRUN_YAML=$( echo "$TASKRUN_YAML" | yq -M e ".spec.params[0].name=\"IMAGE_DIGEST\"" - )
+fi
+
+echo "$TASKRUN_YAML" | oc create -f -
 
 #
 # Watch the taskrun that was created

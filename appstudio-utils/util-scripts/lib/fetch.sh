@@ -27,3 +27,4 @@ source $LIB_DIR/fetch/git.sh
 source $LIB_DIR/fetch/rekor.sh
 source $LIB_DIR/fetch/cluster.sh
 source $LIB_DIR/fetch/tekton.sh
+source $LIB_DIR/fetch/cosign.sh

@@ -17,6 +17,22 @@ spec:
     - name: PIPELINE_RUN_NAME
       type: string
       description: Name of the pipeline run to run policies against
+      default: ""
+
+    - name: IMAGE_DIGEST
+      type: string
+      description: Digest of image to verify
+      default: ""
+
+    - name: IMAGE_URL
+      type: string
+      description: URL of the image to verify
+      default: ""
+
+    - name: REKOR_HOST
+      type: string
+      description: Rekor host for transparency log lookups
+      default: rekor.sigstore.dev
 
     - name: POLICY_REPO
       type: string
@@ -52,8 +68,15 @@ spec:
         # Fetch rego files from github
         env POLICY_REPO="$(params.POLICY_REPO)" POLICY_REPO_REF="$(params.POLICY_REPO_REF)" ./fetch-ec-policies.sh
 
-        # Fetch data about the pipeline run from various sources
-        ./fetch-ec-data.sh "$(params.PIPELINE_RUN_NAME)"
+        if [[ -n "$(params.PIPELINE_RUN_NAME)" ]]; then
+          # If PIPELINE_RUN_NAME is given assume we have cluster access.
+          # Fetch data about the pipeline run from various sources.
+          ./fetch-ec-data.sh "$(params.PIPELINE_RUN_NAME)"
+        else
+          # Otherwise, assume we don't have cluster access and lookup data from the registry
+          # and the transparency log
+          ./fetch-ec-image-data.sh "$(params.IMAGE_URL)" "$(params.IMAGE_DIGEST)" "$(params.REKOR_HOST)"
+        fi
 
         # Run opa to check the rego rules agains the data and save the output
         title "Violations"
