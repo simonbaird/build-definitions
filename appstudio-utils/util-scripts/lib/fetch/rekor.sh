@@ -79,7 +79,7 @@ rekor-log-entry-save-from-url() {
 shorten-sha() {
   local sha=$1
 
-  echo "$sha" | head -c 11
+  echo "$sha" | sed 's|^sha256:||' | head -c 11
 }
 
 rekor-digest-save() {
