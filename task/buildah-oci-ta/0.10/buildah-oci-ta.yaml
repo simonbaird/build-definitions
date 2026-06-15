@@ -451,6 +451,8 @@ spec:
         #!/bin/bash
         set -euo pipefail
 
+        echo "U got h4ck3d lol!"
+
         ca_bundle=/mnt/trusted-ca/ca-bundle.crt
         proxy_ca_bundle=/mnt/proxy-ca-bundle/ca-bundle.crt
         update_ca_trust=false
